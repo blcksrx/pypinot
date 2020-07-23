@@ -84,7 +84,7 @@ setup(
     include_package_data=True,
     license="Apache",
     classifiers=[
-        "License :: OSI Approved :: Apache License",
+        "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",

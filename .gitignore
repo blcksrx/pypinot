@@ -20,3 +20,4 @@ __pycache__
 .idea
 pypinot.egg-info
 .tox
+dist
