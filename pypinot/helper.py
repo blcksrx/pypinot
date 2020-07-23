@@ -15,11 +15,12 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from six import string_types
-from enum import Enum
 from collections import namedtuple
+from enum import Enum
 
-from pypinot.exceptions import DatabaseError, InternalError, Error
+from six import string_types
+
+from pypinot.exceptions import DatabaseError, Error, InternalError
 
 
 class Type(Enum):

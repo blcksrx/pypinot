@@ -15,26 +15,18 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from collections import namedtuple, OrderedDict
-from six.moves.urllib import parse
-from pprint import pformat
 import logging
-
+from collections import OrderedDict, namedtuple
+from pprint import pformat
 
 import requests
+from six.moves.urllib import parse
 
-
-from pypinot.exceptions import DatabaseError, ProgrammingError, NotSupportedError
-from pypinot.helper import (
-    check_closed,
-    get_group_by_column_names,
-    apply_parameters,
-    get_types_from_rows,
-    get_description_from_types,
-    check_result,
-)
-from pypinot.helper import apply_parameters
-
+from pypinot.exceptions import (DatabaseError, NotSupportedError,
+                                ProgrammingError)
+from pypinot.helper import (apply_parameters, check_closed, check_result,
+                            get_description_from_types,
+                            get_group_by_column_names, get_types_from_rows)
 
 logger = logging.getLogger(__name__)
 

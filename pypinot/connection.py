@@ -16,9 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from pypinot.helper import check_closed
-from pypinot.exceptions import Error
 from pypinot.cursor import Cursor
+from pypinot.exceptions import Error
+from pypinot.helper import check_closed
 
 
 class Connection(object):
