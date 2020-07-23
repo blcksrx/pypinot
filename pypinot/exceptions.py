@@ -51,4 +51,3 @@ class DataError(DatabaseError):
 
 class NotSupportedError(DatabaseError):
     pass
-

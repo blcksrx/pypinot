@@ -26,7 +26,7 @@ class Connection(object):
     """Connection to a Pinot database."""
 
     def __init__(self, *args, **kwargs):
-        self._debug = kwargs.get('debug', False)
+        self._debug = kwargs.get("debug", False)
         self._args = args
         self._kwargs = kwargs
         self.closed = False

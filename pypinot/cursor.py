@@ -25,7 +25,14 @@ import requests
 
 
 from pypinot.exceptions import DatabaseError, ProgrammingError, NotSupportedError
-from pypinot.helper import check_closed, get_group_by_column_names, apply_parameters, get_types_from_rows, get_description_from_types, check_result
+from pypinot.helper import (
+    check_closed,
+    get_group_by_column_names,
+    apply_parameters,
+    get_types_from_rows,
+    get_description_from_types,
+    check_result,
+)
 from pypinot.helper import apply_parameters
 
 
@@ -35,9 +42,16 @@ logger = logging.getLogger(__name__)
 class Cursor(object):
     """Connection cursor."""
 
-    def __init__(self, host, port=8099, scheme='http', path='/query', extra_request_headers='', debug=False):
-        self.url = parse.urlunparse(
-            (scheme, f'{host}:{port}', path, None, None, None))
+    def __init__(
+        self,
+        host,
+        port=8099,
+        scheme="http",
+        path="/query",
+        extra_request_headers="",
+        debug=False,
+    ):
+        self.url = parse.urlunparse((scheme, f"{host}:{port}", path, None, None, None))
 
         # This read/write attribute specifies the number of rows to fetch at a
         # time with .fetchmany(). It defaults to 1 meaning to fetch a single
@@ -53,8 +67,8 @@ class Cursor(object):
         self._debug = debug
         extra_headers = {}
         if extra_request_headers:
-            for header in extra_request_headers.split(','):
-                k, v = header.split('=')
+            for header in extra_request_headers.split(","):
+                k, v = header.split("=")
                 extra_headers[k] = v
         self._extra_request_headers = extra_headers
 
@@ -67,96 +81,125 @@ class Cursor(object):
     def execute(self, operation, parameters=None):
         query = apply_parameters(operation, parameters or {})
 
-        headers = {'Content-Type': 'application/json'}
+        headers = {"Content-Type": "application/json"}
         headers.update(self._extra_request_headers)
-        payload = {'pql': query}
+        payload = {"pql": query}
         if self._debug:
-            logger.info(f'Submitting the pinot query to {self.url}:\n{query}\n{pformat(payload)}, with {headers}')
+            logger.info(
+                f"Submitting the pinot query to {self.url}:\n{query}\n{pformat(payload)}, with {headers}"
+            )
         r = requests.post(self.url, headers=headers, json=payload)
         if r.encoding is None:
-            r.encoding = 'utf-8'
+            r.encoding = "utf-8"
 
         try:
             payload = r.json()
         except Exception as e:
-            raise DatabaseError(f"Error when querying {query} from {self.url}, raw response is:\n{r.text}") from e
+            raise DatabaseError(
+                f"Error when querying {query} from {self.url}, raw response is:\n{r.text}"
+            ) from e
 
         if self._debug:
-            logger.info(f'Got the payload of type {type(payload)} with the status code {0 if not r else r.status_code}:\n{payload}')
+            logger.info(
+                f"Got the payload of type {type(payload)} with the status code {0 if not r else r.status_code}:\n{payload}"
+            )
 
-        num_servers_responded = payload.get('numServersResponded', -1)
-        num_servers_queried = payload.get('numServersQueried', -1)
+        num_servers_responded = payload.get("numServersResponded", -1)
+        num_servers_queried = payload.get("numServersQueried", -1)
 
-        if num_servers_queried > num_servers_responded or num_servers_responded == -1 or num_servers_queried == -1:
-            raise DatabaseError(f"Query\n\n{query} timed out: Out of {num_servers_queried}, only"
-                                           f" {num_servers_responded} responded")
+        if (
+            num_servers_queried > num_servers_responded
+            or num_servers_responded == -1
+            or num_servers_queried == -1
+        ):
+            raise DatabaseError(
+                f"Query\n\n{query} timed out: Out of {num_servers_queried}, only"
+                f" {num_servers_responded} responded"
+            )
 
         # raise any error messages
         if r.status_code != 200:
             msg = f"Query\n\n{query}\n\nreturned an error: {r.status_code}\nFull response is {pformat(payload)}"
             raise ProgrammingError(msg)
 
-        if payload.get('exceptions', []):
-            msg = '\n'.join(pformat(exception)
-                            for exception in payload['exceptions'])
+        if payload.get("exceptions", []):
+            msg = "\n".join(pformat(exception) for exception in payload["exceptions"])
             raise DatabaseError(msg)
 
         rows = []  # array of array, where inner array is array of column values
-        column_names = [] # column names, such that len(column_names) == len(rows[0])
+        column_names = []  # column names, such that len(column_names) == len(rows[0])
 
-        if 'aggregationResults' in payload:
-            aggregation_results = payload['aggregationResults']
+        if "aggregationResults" in payload:
+            aggregation_results = payload["aggregationResults"]
             gby_cols = get_group_by_column_names(aggregation_results)
-            metric_names = [agg_result['function'] for agg_result in aggregation_results]
-            gby_rows = OrderedDict() # Dict of group-by-vals to array of metrics
+            metric_names = [
+                agg_result["function"] for agg_result in aggregation_results
+            ]
+            gby_rows = OrderedDict()  # Dict of group-by-vals to array of metrics
             total_group_vals_key = ()
             num_metrics = len(metric_names)
             for i, agg_result in enumerate(aggregation_results):
-                if 'groupByResult' in agg_result:
+                if "groupByResult" in agg_result:
                     if total_group_vals_key in gby_rows:
-                        raise DatabaseError(f"Invalid response {pformat(aggregation_results)} since we have both total and group by results")
-                    for gb_result in agg_result['groupByResult']:
-                        group_values = gb_result['group']
+                        raise DatabaseError(
+                            f"Invalid response {pformat(aggregation_results)} since we have both total and group by results"
+                        )
+                    for gb_result in agg_result["groupByResult"]:
+                        group_values = gb_result["group"]
                         if len(group_values) < len(gby_cols):
-                            raise DatabaseError(f"Expected {pformat(agg_result)} to contain {len(gby_cols)}, but got {len(group_values)}")
+                            raise DatabaseError(
+                                f"Expected {pformat(agg_result)} to contain {len(gby_cols)}, but got {len(group_values)}"
+                            )
                         elif len(group_values) > len(gby_cols):
                             # This can happen because of poor escaping in the results
                             extra = len(group_values) - len(gby_cols)
                             new_group_values = group_values[extra:]
-                            new_group_values[0] = ''.join(group_values[0:extra]) + new_group_values[0]
+                            new_group_values[0] = (
+                                "".join(group_values[0:extra]) + new_group_values[0]
+                            )
                             group_values = new_group_values
 
                         group_values_key = tuple(group_values)
                         if group_values_key not in gby_rows:
                             gby_rows[group_values_key] = [None] * num_metrics
-                        gby_rows[group_values_key][i] = gb_result['value']
-                else: # Global aggregation result
+                        gby_rows[group_values_key][i] = gb_result["value"]
+                else:  # Global aggregation result
                     if total_group_vals_key not in gby_rows:
                         gby_rows[total_group_vals_key] = [None] * num_metrics
                     if len(gby_rows) != 1:
-                        raise DatabaseError(f"Invalid response {pformat(aggregation_results)} since we have both total and group by results")
+                        raise DatabaseError(
+                            f"Invalid response {pformat(aggregation_results)} since we have both total and group by results"
+                        )
                     if len(gby_cols) > 0:
-                        raise DatabaseError(f"Invalid response since total aggregation results are present even when non zero gby_cols:{gby_cols}, {pformat(aggregation_results)}")
-                    gby_rows[total_group_vals_key][i] = agg_result['value']
+                        raise DatabaseError(
+                            f"Invalid response since total aggregation results are present even when non zero gby_cols:{gby_cols}, {pformat(aggregation_results)}"
+                        )
+                    gby_rows[total_group_vals_key][i] = agg_result["value"]
 
             rows = []
             column_names = gby_cols + metric_names
             for group_vals, metric_vals in gby_rows.items():
                 if len(group_vals) != len(gby_cols):
-                    raise DatabaseError(f"Expected {len(gby_cols)} but got {len(group_vals)} for a row")
+                    raise DatabaseError(
+                        f"Expected {len(gby_cols)} but got {len(group_vals)} for a row"
+                    )
                 if len(metric_vals) != len(metric_names):
-                    raise DatabaseError(f"Expected {len(metric_names)} but got {len(metric_vals)} for a row")
+                    raise DatabaseError(
+                        f"Expected {len(metric_names)} but got {len(metric_vals)} for a row"
+                    )
                 rows.append(list(group_vals) + metric_vals)
-        elif 'selectionResults' in payload:
-            results = payload['selectionResults']
-            column_names = results.get('columns')
-            values = results.get('results')
+        elif "selectionResults" in payload:
+            results = payload["selectionResults"]
+            column_names = results.get("columns")
+            values = results.get("results")
             if column_names and values:
                 rows = values
             else:
-                raise DatabaseError(f'Expected columns and results in selectionResults, but got {pformat(results)} instead')
+                raise DatabaseError(
+                    f"Expected columns and results in selectionResults, but got {pformat(results)} instead"
+                )
 
-        logger.debug(f'Got the rows as a type {type(rows)} of size {len(rows)}')
+        logger.debug(f"Got the rows as a type {type(rows)} of size {len(rows)}")
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(pformat(rows))
         self.description = None
@@ -164,7 +207,9 @@ class Cursor(object):
         if rows:
             types = get_types_from_rows(column_names, rows)
             if self._debug:
-                logger.info(f'There are {len(rows)} rows and types is {pformat(types)}, column_names are {pformat(column_names)}, first row is like {pformat(rows[0])}, and last row is like {pformat(rows[-1])}')
+                logger.info(
+                    f"There are {len(rows)} rows and types is {pformat(types)}, column_names are {pformat(column_names)}, first row is like {pformat(rows[0])}, and last row is like {pformat(rows[-1])}"
+                )
             self._results = rows
             self.description = get_description_from_types(column_names, types)
 
@@ -172,8 +217,7 @@ class Cursor(object):
 
     @check_closed
     def executemany(self, operation, seq_of_parameters=None):
-        raise NotSupportedError(
-            '`executemany` is not supported, use `execute` instead')
+        raise NotSupportedError("`executemany` is not supported, use `execute` instead")
 
     @check_result
     @check_closed
