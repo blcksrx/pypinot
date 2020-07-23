@@ -19,7 +19,7 @@ REQUIRED = [
 if sys.version_info < (3, 6):
     sys.exit("Sorry, Python < 3.6 is not supported")
 
-development_extras = ["flake8==3.8.3", "black==19.10b0", "isort==5.1.4", "tox==3.18.0"]
+development_extras = ["black==19.10b0", "isort==5.1.4", "tox==3.18.0"]
 
 # The rest you shouldn't have to touch too much :)
 # ------------------------------------------------
