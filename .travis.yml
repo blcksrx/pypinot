@@ -1,0 +1,9 @@
+language: python
+install:
+  - pip install tox
+jons:
+  include:
+    - name: Black
+      script: tox -e black
+    - name: Isort
+      script: tox -e isort
