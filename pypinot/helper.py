@@ -103,7 +103,7 @@ def get_types_from_rows(column_names, rows):
     if not column_names:
         return []
     if not rows:
-        raise InternalError(f"Cannot infer the column types from empty rows")
+        raise InternalError("Cannot infer the column types from empty rows")
     types = [None] * len(column_names)
     remaining = len(column_names)
     TypeCodeAndValue = namedtuple("TypeCodeAndValue", ["code", "value"])
@@ -121,7 +121,7 @@ def get_types_from_rows(column_names, rows):
                     remaining -= 1
                 elif new_type is not current_type.code:
                     raise DatabaseError(
-                        f"Differing column type found for column {name}:"
+                        f"Differing column type found for column {column_names[column_index]}:"
                         f"{current_type} vs {TypeCodeAndValue(code=new_type, value=value)}"
                     )
     if any([t is None for t in types]):
@@ -137,7 +137,7 @@ def get_types_from_rows(column_names, rows):
     if not column_names:
         return []
     if not rows:
-        raise InternalError(f"Cannot infer the column types from empty rows")
+        raise InternalError("Cannot infer the column types from empty rows")
     types = [None] * len(column_names)
     remaining = len(column_names)
     TypeCodeAndValue = namedtuple("TypeCodeAndValue", ["code", "value"])
@@ -155,7 +155,7 @@ def get_types_from_rows(column_names, rows):
                     remaining -= 1
                 elif new_type is not current_type.code:
                     raise DatabaseError(
-                        f"Differing column type found for column {name}:"
+                        f"Differing column type found for column {column_names[column_index]}:"
                         f"{current_type} vs {TypeCodeAndValue(code=new_type, value=value)}"
                     )
     if any([t is None for t in types]):
