@@ -4,7 +4,7 @@ Pypinot
 [![Build Status](https://travis-ci.org/apache/incubator-superset.svg?branch=master)](https://travis-ci.org/blcksrx/pypinot.svg?branch=master)
 [![PyPI version](https://badge.fury.io/py/pypinot.svg)](https://badge.fury.io/py/pypinot)
 
-# Python DB-API and SQLAlchemy dialect for Pinot #
+# Python DB-API for Apache Pinot #
 
 [Apache Pinot](https://pinot.apache.org/) is a realtime distributed OLAP datastore, designed to answer OLAP queries with low latency.
 This package provides **DB API** to interact with Apache Pinot
