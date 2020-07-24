@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 import logging
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 from pprint import pformat
 
 import requests

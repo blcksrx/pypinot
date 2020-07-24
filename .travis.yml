@@ -3,6 +3,8 @@ install:
   - pip install tox
 jons:
   include:
+    - name: Flake8
+      script: tox -e flake8
     - name: Black
       script: tox -e black
     - name: Isort
